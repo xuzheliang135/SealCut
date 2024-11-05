@@ -12,5 +12,7 @@ streamlit run app.py
 
 [https://sealcut.streamlit.app/](https://sealcut.streamlit.app/)
 
+如果你需要盖骑缝章，可以试试 [小印章](https://esign.freecicoda.com/)
+
 # 截图示例
 ![](./snapshots/image.png)
