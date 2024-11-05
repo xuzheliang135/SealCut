@@ -1,4 +1,4 @@
 rembg
-PIL
+Pillow
 numpy
 streamlit
