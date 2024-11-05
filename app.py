@@ -2,6 +2,13 @@ import streamlit as st
 from PIL import Image
 import os
 from seal_processor import process_seal_complete
+from datetime import datetime
+
+def get_timestamp_filename(original_filename):
+    """生成带时间戳的文件名"""
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    file_ext = os.path.splitext(original_filename)[1]
+    return f"{timestamp}{file_ext}"
 
 def reset_state():
     """重置所有状态"""
@@ -20,6 +27,13 @@ def main():
     if 'result' not in st.session_state:
         st.session_state.result = None
 
+    # 创建保存文件的目录
+    upload_dir = "uploads"
+    output_dir = "outputs"
+    for dir_path in [upload_dir, output_dir]:
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
+
     # 文件上传
     uploaded_file = st.file_uploader("选择图片文件", type=['png', 'jpg', 'jpeg'], on_change=reset_state)
     
@@ -37,30 +51,27 @@ def main():
                 
                 with st.spinner("正在处理中..."):
                     try:
-                        # 创建临时文件夹
-                        temp_dir = "temp_results"
-                        if not os.path.exists(temp_dir):
-                            os.makedirs(temp_dir)
-                        else:
-                            # 清理临时文件
-                            for file in os.listdir(temp_dir):
-                                os.remove(os.path.join(temp_dir, file))
-                        
                         progress_bar.progress(30)
                         status_text.text("正在保存上传文件...")
                         
-                        # 保存上传文件
-                        input_path = os.path.join(temp_dir, "input.png")
+                        # 使用时间戳保存上传文件
+                        timestamp_filename = get_timestamp_filename(uploaded_file.name)
+                        input_path = os.path.join(upload_dir, timestamp_filename)
                         image.save(input_path)
                         
                         progress_bar.progress(60)
                         status_text.text("正在处理图片...")
                         
+                        # 生成输出文件名
+                        output_filename = os.path.splitext(timestamp_filename)[0] + "_output.png"
+                        output_path = os.path.join(output_dir, output_filename)
+                        
                         # 处理图片
-                        process_seal_complete(input_path, temp_dir)
+                        process_seal_complete(input_path, output_path)
                         
                         # 保存结果到 session_state
-                        st.session_state.result = Image.open(os.path.join(temp_dir, "extracted_seal.png"))
+                        st.session_state.result = Image.open(output_path)
+                        st.session_state.output_path = output_path
                         st.session_state.processed = True
                         
                         progress_bar.progress(100)
@@ -79,12 +90,11 @@ def main():
                 st.image(st.session_state.result, caption="提取的印章")
                 
                 # 下载按钮
-                result_path = os.path.join("temp_results", "extracted_seal.png")
-                with open(result_path, "rb") as file:
+                with open(st.session_state.output_path, "rb") as file:
                     btn = st.download_button(
                         label="下载处理结果",
                         data=file,
-                        file_name="extracted_seal.png",
+                        file_name=os.path.basename(st.session_state.output_path),
                         mime="image/png"
                     )
 

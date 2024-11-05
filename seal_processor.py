@@ -45,10 +45,6 @@ def extract_seal(input_path, output_path):
     result_image.save(output_path)
     return img_array
 
-def process_seal_complete(input_path, output_folder):
+def process_seal_complete(input_path, output_path):
     """处理印章的主函数"""
-    if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
-    
-    output_path = os.path.join(output_folder, 'extracted_seal.png')
     extract_seal(input_path, output_path)
